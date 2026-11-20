@@ -7,11 +7,13 @@ INDIA = ["Bengaluru, Karnataka, India", "Pune, Maharashtra, India", "Hyderabad, 
 UAE = "United Arab Emirates"
 
 TERMS = {
-    "product": ["digital banking product", "head of product banking", "retail banking product director"],
-    "consulting": ["banking practice head", "banking transformation director",
-                   "BFS client partner", "core banking transformation"],
+    "product": ["digital banking product", "head of product banking", "retail banking product director",
+                "vice president product management bank", "head digital lending"],
+    "consulting": ["banking practice head", "banking transformation director", "BFS client partner",
+                   "core banking transformation", "BFSI delivery head", "banking consulting director"],
 }
-HOURS_OLD = 48
+HOURS_INDIA = 168   # 7 days
+HOURS_UAE = 336     # 14 days
 PER_SEARCH = 25
 DESC_CHARS = 3500
 
@@ -22,15 +24,15 @@ for track, terms in TERMS.items():
             searches.append(dict(track=track, sites=["linkedin"], term=t, location=loc))
             searches.append(dict(track=track, sites=["naukri"], term=t, location=loc.split(",")[0]))
         searches.append(dict(track=track, sites=["indeed"], term=t, location="India", country="india"))
-        searches.append(dict(track=track, sites=["linkedin"], term=t, location=UAE))
-        searches.append(dict(track=track, sites=["indeed"], term=t, location=UAE, country="united arab emirates"))
-        searches.append(dict(track=track, sites=["bayt"], term=t, location=UAE))
+        searches.append(dict(track=track, sites=["linkedin"], term=t, location=UAE, hours=HOURS_UAE))
+        searches.append(dict(track=track, sites=["indeed"], term=t, location=UAE, country="united arab emirates", hours=HOURS_UAE))
+        searches.append(dict(track=track, sites=["bayt"], term=t, location=UAE, hours=HOURS_UAE))
 
 frames, log = [], []
 for s in searches:
     try:
         df = scrape_jobs(site_name=s["sites"], search_term=s["term"], location=s["location"],
-                         results_wanted=PER_SEARCH, hours_old=HOURS_OLD,
+                         results_wanted=PER_SEARCH, hours_old=s.get("hours", HOURS_INDIA),
                          country_indeed=s.get("country", "india"),
                          linkedin_fetch_description=True, fetch_description=True, verbose=0)
         n = 0 if df is None else len(df)
@@ -58,7 +60,7 @@ if frames:
         jobs.append(r)
 
 now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ")
-out = {"generated_utc": now, "hours_old": HOURS_OLD, "job_count": len(jobs),
+out = {"generated_utc": now, "hours_india": HOURS_INDIA, "hours_uae": HOURS_UAE, "job_count": len(jobs),
        "source_status": log, "jobs": jobs}
 os.makedirs("jobs", exist_ok=True)
 with open("jobs/latest.json", "w") as f:
