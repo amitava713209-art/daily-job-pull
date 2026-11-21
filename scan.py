@@ -26,7 +26,7 @@ for track, terms in TERMS.items():
         searches.append(dict(track=track, sites=["indeed"], term=t, location="India", country="india"))
         searches.append(dict(track=track, sites=["linkedin"], term=t, location=UAE, hours=HOURS_UAE))
         searches.append(dict(track=track, sites=["indeed"], term=t, location=UAE, country="united arab emirates", hours=HOURS_UAE))
-        searches.append(dict(track=track, sites=["bayt"], term=t, location=UAE, hours=HOURS_UAE))
+        # searches.append(dict(track=track, sites=["bayt"], term=t, location=UAE, hours=HOURS_UAE))
 
 frames, log = [], []
 for s in searches:
