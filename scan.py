@@ -15,7 +15,7 @@ TERMS = {
 HOURS_INDIA = 168   # 7 days
 HOURS_UAE = 336     # 14 days
 PER_SEARCH = 25
-DESC_CHARS = 3500
+DESC_CHARS = 8000
 
 searches = []
 for track, terms in TERMS.items():
