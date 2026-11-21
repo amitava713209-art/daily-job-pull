@@ -24,3 +24,18 @@ jobs:
           git commit -m "Job pull $(date -u +%F)" || echo "nothing new"
           git pull --rebase origin main
           git push
+      - name: Second scan
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 30
+        run: python scan_b.py
+      - name: Save second results
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          git config user.name "job-pull-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add jobs/latest_b.json
+          git commit -m "Job pull B $(date -u +%F)" || echo "nothing new"
+          git pull --rebase origin main
+          git push
