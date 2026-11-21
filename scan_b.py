@@ -6,6 +6,7 @@ from jobspy import scrape_jobs
 # Naukri accepts several cities in one search. LinkedIn and Indeed search all of India;
 # the city filter is applied later, when the results are read.
 CITIES = "Bengaluru, Pune, Mumbai, Hyderabad, Delhi"
+UAE = "United Arab Emirates"
 
 TERMS = [
     "food R&D manager",
@@ -17,7 +18,8 @@ TERMS = [
     "claims substantiation",
     "fermentation scientist",
 ]
-HOURS = 168        # 7 days
+HOURS = 168        # 7 days (India)
+HOURS_UAE = 336    # 14 days (UAE)
 PER_SEARCH = 40
 DESC_CHARS = 8000
 
@@ -26,23 +28,27 @@ for t in TERMS:
     searches.append(dict(sites=["linkedin"], term=t, location="India"))
     searches.append(dict(sites=["naukri"], term=t, location=CITIES))
     searches.append(dict(sites=["indeed"], term=t, location="India"))
+    searches.append(dict(sites=["linkedin"], term=t, location=UAE, hours=HOURS_UAE, region="uae"))
+    searches.append(dict(sites=["indeed"], term=t, location=UAE, country="united arab emirates",
+                         hours=HOURS_UAE, region="uae"))
 
 frames, log = [], []
 for s in searches:
     try:
         df = scrape_jobs(site_name=s["sites"], search_term=s["term"], location=s["location"],
-                         results_wanted=PER_SEARCH, hours_old=HOURS, country_indeed="india",
+                         results_wanted=PER_SEARCH, hours_old=s.get("hours", HOURS),
+                         country_indeed=s.get("country", "india"),
                          linkedin_fetch_description=True, fetch_description=True, verbose=0)
         n = 0 if df is None else len(df)
         if n:
-            df["search_term"] = s["term"]
+            df["search_term"], df["region"] = s["term"], s.get("region", "india")
             frames.append(df)
         log.append({**s, "count": n, "ok": True})
     except Exception as e:
         log.append({**s, "count": 0, "ok": False, "error": str(e)[:300]})
     time.sleep(4)
 
-keep = ["site", "search_term", "title", "company", "location", "date_posted",
+keep = ["site", "region", "search_term", "title", "company", "location", "date_posted",
         "job_url", "job_url_direct", "job_level", "is_remote", "description"]
 jobs = []
 if frames:
@@ -58,7 +64,7 @@ if frames:
         jobs.append(r)
 
 now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%MZ")
-out = {"generated_utc": now, "hours": HOURS, "job_count": len(jobs), "source_status": log, "jobs": jobs}
+out = {"generated_utc": now, "hours": HOURS, "hours_uae": HOURS_UAE, "job_count": len(jobs), "source_status": log, "jobs": jobs}
 os.makedirs("jobs", exist_ok=True)
 with open("jobs/latest_b.json", "w") as f:
     json.dump(out, f, ensure_ascii=False, indent=1, default=str)
