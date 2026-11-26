@@ -6,12 +6,19 @@ from jobspy import scrape_jobs
 INDIA = ["Bengaluru, Karnataka, India", "Pune, Maharashtra, India", "Hyderabad, Telangana, India"]
 UAE = "United Arab Emirates"
 
-TERMS = {
+TERMS = {   # LinkedIn + Indeed (India and UAE)
     "product": ["digital banking product", "head of product banking", "retail banking product director",
-                "vice president product management bank", "head digital lending"],
+                "vice president product management bank", "head digital lending", "head of digital banking",
+                "fintech head of product"],
     "consulting": ["banking practice head", "banking transformation director", "BFS client partner",
-                   "core banking transformation", "BFSI delivery head", "banking consulting director"],
+                   "core banking transformation", "BFSI delivery head", "banking consulting director",
+                   "director financial services consulting"],
 }
+NAUKRI_TERMS = {   # Naukri only matches short keywords; long phrases return 0
+    "product": ["digital banking", "product head", "digital lending", "vp product"],
+    "consulting": ["bfsi", "banking transformation", "client partner", "delivery head", "core banking"],
+}
+NAUKRI_RESULTS = 50
 HOURS_INDIA = 168   # 7 days
 HOURS_UAE = 336     # 14 days
 PER_SEARCH = 25
@@ -22,17 +29,19 @@ for track, terms in TERMS.items():
     for t in terms:
         for loc in INDIA:
             searches.append(dict(track=track, sites=["linkedin"], term=t, location=loc))
-            searches.append(dict(track=track, sites=["naukri"], term=t, location=loc.split(",")[0]))
         searches.append(dict(track=track, sites=["indeed"], term=t, location="India", country="india"))
         searches.append(dict(track=track, sites=["linkedin"], term=t, location=UAE, hours=HOURS_UAE))
         searches.append(dict(track=track, sites=["indeed"], term=t, location=UAE, country="united arab emirates", hours=HOURS_UAE))
-        # searches.append(dict(track=track, sites=["bayt"], term=t, location=UAE, hours=HOURS_UAE))
+for track, terms in NAUKRI_TERMS.items():
+    for t in terms:
+        for loc in INDIA:
+            searches.append(dict(track=track, sites=["naukri"], term=t, location=loc.split(",")[0], n=NAUKRI_RESULTS))
 
 frames, log = [], []
 for s in searches:
     try:
         df = scrape_jobs(site_name=s["sites"], search_term=s["term"], location=s["location"],
-                         results_wanted=PER_SEARCH, hours_old=s.get("hours", HOURS_INDIA),
+                         results_wanted=s.get("n", PER_SEARCH), hours_old=s.get("hours", HOURS_INDIA),
                          country_indeed=s.get("country", "india"),
                          linkedin_fetch_description=True, fetch_description=True, verbose=0)
         n = 0 if df is None else len(df)
